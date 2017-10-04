@@ -19,7 +19,10 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
@@ -29,6 +32,7 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -47,7 +51,13 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     GoogleApiClient mGoogleApiClient;
     LatLng mylocation;
 
+    private FusedLocationProviderClient mFusedLocationClient;
+    private LocationCallback mLocationCallback;
+
+    //FusedLocationProviderClient mFusedLocationClient;
+
     private DatabaseReference mDatabase;
+    GPSTracker gps;
 
 
     boolean readyMap =false;
@@ -60,24 +70,25 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
 
-        FirebaseApp.initializeApp(this);
+
+        //FirebaseApp.initializeApp(this);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        mDatabase = FirebaseDatabase.getInstance().getReference();
+        //mDatabase = FirebaseDatabase.getInstance().getReference();
 
         read=  (Button) findViewById(R.id.read);
         write = (Button) findViewById(R.id.write);
         read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mDatabase.setValue("Lakshay");
+                //mDatabase.setValue("Lakshay");
                 //writeNewUser("AbC","Lakshay","email");
             }
         });
 
-
+/*
         ValueEventListener postListener = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -94,28 +105,38 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         };
         mDatabase.addValueEventListener(postListener);
-
+*/
 
         current = (ImageView) findViewById(R.id.current_location);
         current.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 if(readyMap){
-                    try {
-                        Location mLastLocation = LocationServices.FusedLocationApi
-                                .getLastLocation(mGoogleApiClient);
-                        if(mLastLocation != null) {
-                            mylocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                            mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
-                            mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
+
+                        try {
+                            //mFusedLocationClient = LocationServices.FusedLocationApi;
+                            Location mLastLocation = LocationServices.FusedLocationApi
+                                    .getLastLocation(mGoogleApiClient);
+                            if (mLastLocation != null) {
+                                mylocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
+                                Toast.makeText(MapsActivity.this,"Your Location is - \nLat: " + mLastLocation.getLatitude() + "\nLong: " + mLastLocation.getLongitude(),Toast.LENGTH_SHORT).show();
+
+                                mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
+                                mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
+                                Log.v("Lakshay", "Longitude: " + mLastLocation.getLongitude() + "Latitude: " + mLastLocation.getLatitude());
+
+                            } else
+                                Toast.makeText(MapsActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
+                        } catch (SecurityException e) {
+                            Toast.makeText(MapsActivity.this, "Turn On the Location to get Current Location", Toast.LENGTH_LONG).show();
+                            Log.v("LAKSHAY", "Can't find current location");
                         }
-                        else
-                            Toast.makeText(MapsActivity.this,"Something went wrong",Toast.LENGTH_LONG).show();
-                        Log.v("Lakshay","Altitude: "+mLastLocation.getAltitude() + "Latitude: "+mLastLocation.getLatitude());
-                    }catch (SecurityException e){
-                        Toast.makeText(MapsActivity.this,"Turn On the Location to get Current Location",Toast.LENGTH_LONG).show();
-                        Log.v("LAKSHAY", "Can't find current location");
-                    }
+
+                    /*
+                    // create class object
+                    gps = new GPSTracker(MapsActivity.this);
+                    GetLocation();
+                    */
                 }
                 else{
                     Toast.makeText(MapsActivity.this,"Turn On the Location to get Current Location",Toast.LENGTH_LONG).show();
@@ -125,7 +146,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         //checkPlayServices();
     }
-
 
     /**
      * Manipulates the map once available.
@@ -139,6 +159,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
+        /*
 
         //Location location = mMap.getMyLocation();
         //try {
@@ -166,6 +187,59 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
         PendingResult<LocationSettingsResult> result =
                 LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
+
+    */
+
+        mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+        LocationRequest mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(10000);
+        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+
+        try {
+            mFusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                        @Override
+                        public void onSuccess(Location location) {
+                            // Got last known location. In some rare situations this can be null.
+                            if (location != null) {
+                                // Logic to handle location object
+                            }
+                        }
+                    });
+
+            mLocationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    Log.i("Lakshay",  "Changed" );
+                    for (Location location : locationResult.getLocations()) {
+                        Toast.makeText(MapsActivity.this, "Lat:" + location.getLatitude() + "Long: "+location.getLongitude(),Toast.LENGTH_SHORT).show();
+
+                        mylocation = new LatLng(location.getLatitude(), location.getLongitude());
+
+                        mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
+                        mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
+
+                        Log.i("Lakshay",  "Lat:" + location.getLatitude() + "Long: "+location.getLongitude() );
+                        // Update UI with location data
+                        // ...
+                    }
+                };
+            };
+
+            mFusedLocationClient.requestLocationUpdates(mLocationRequest,
+                    mLocationCallback,
+                    null /* Looper */);
+
+
+        }
+        catch (SecurityException e){
+
+        }
+
     }
 
     @Override
@@ -235,6 +309,29 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             this.email = email;
         }
 
+    }
+
+    public void GetLocation(){
+
+        // check if GPS enabled
+        if(gps.canGetLocation()){
+
+            double latitude = gps.getLatitude();
+            double longitude = gps.getLongitude();
+
+            mylocation = new LatLng(latitude, longitude);
+            mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
+            mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
+            Log.v("Lakshay","Longitude: "+ longitude + "Latitude: "+latitude);
+
+            // \n is for new line
+            Toast.makeText(getApplicationContext(), "Your Location is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_SHORT).show();
+        }else {
+            // can't get location
+            // GPS or Network is not enabled
+            // Ask user to enable GPS/network in settings
+            gps.showSettingsAlert();
+        }
     }
 
 }
