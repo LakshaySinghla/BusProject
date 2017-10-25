@@ -1,5 +1,6 @@
 package com.carpenoctem.myapplication1;
 
+import android.content.Intent;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -31,6 +32,7 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.FirebaseApp;
@@ -53,12 +55,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationCallback mLocationCallback;
-
-    //FusedLocationProviderClient mFusedLocationClient;
-
+    Marker marker;
+    int index;
+    String check;
     private DatabaseReference mDatabase;
-    GPSTracker gps;
-
 
     boolean readyMap =false;
     ImageView current;
@@ -69,43 +69,28 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
+        Intent i =getIntent();
+        index = i.getIntExtra("index",0);
 
+        mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        //FirebaseApp.initializeApp(this);
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-        //mDatabase = FirebaseDatabase.getInstance().getReference();
 
-        read=  (Button) findViewById(R.id.read);
+        read = (Button) findViewById(R.id.read);
         write = (Button) findViewById(R.id.write);
         read.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                //mDatabase.setValue("Lakshay");
-                //writeNewUser("AbC","Lakshay","email");
+                if (marker != null) {
+                    marker.remove();
+                }
+                marker = mMap.addMarker(new MarkerOptions().position(new LatLng(-31.90, 115.86)));
+                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-31.90, 115.86)));
             }
         });
-
-/*
-        ValueEventListener postListener = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                // Get Post object and use the values to update the UI
-                User user = dataSnapshot.getValue(User.class);
-                Toast.makeText(MapsActivity.this,"UserName: "+user.username ,Toast.LENGTH_LONG).show();
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-                // Getting Post failed, log a message
-                Log.w("Lakshay", "loadPost:onCancelled", databaseError.toException());
-                // ...
-            }
-        };
-        mDatabase.addValueEventListener(postListener);
-*/
 
         current = (ImageView) findViewById(R.id.current_location);
         current.setOnClickListener(new View.OnClickListener() {
@@ -113,30 +98,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             public void onClick(View view) {
                 if(readyMap){
 
-                        try {
-                            //mFusedLocationClient = LocationServices.FusedLocationApi;
-                            Location mLastLocation = LocationServices.FusedLocationApi
-                                    .getLastLocation(mGoogleApiClient);
-                            if (mLastLocation != null) {
-                                mylocation = new LatLng(mLastLocation.getLatitude(), mLastLocation.getLongitude());
-                                Toast.makeText(MapsActivity.this,"Your Location is - \nLat: " + mLastLocation.getLatitude() + "\nLong: " + mLastLocation.getLongitude(),Toast.LENGTH_SHORT).show();
-
-                                mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
-                                mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
-                                Log.v("Lakshay", "Longitude: " + mLastLocation.getLongitude() + "Latitude: " + mLastLocation.getLatitude());
-
-                            } else
-                                Toast.makeText(MapsActivity.this, "Something went wrong", Toast.LENGTH_LONG).show();
-                        } catch (SecurityException e) {
-                            Toast.makeText(MapsActivity.this, "Turn On the Location to get Current Location", Toast.LENGTH_LONG).show();
-                            Log.v("LAKSHAY", "Can't find current location");
-                        }
-
-                    /*
-                    // create class object
-                    gps = new GPSTracker(MapsActivity.this);
-                    GetLocation();
-                    */
                 }
                 else{
                     Toast.makeText(MapsActivity.this,"Turn On the Location to get Current Location",Toast.LENGTH_LONG).show();
@@ -144,7 +105,27 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             }
         });
 
-        //checkPlayServices();
+        /*
+        for(index=1;index<=2;index++){
+            mDatabase.addValueEventListener(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    check = dataSnapshot.child("879").child("bus" + index).child("check").getValue(String.class);
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            if (check.equals("true")) {
+                mDatabase.child("879").child("bus" + index).child("check").setValue("false");
+                break;
+            }
+        }
+        */
+
     }
 
     /**
@@ -159,36 +140,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     @Override
     public void onMapReady(GoogleMap googleMap) {
         mMap = googleMap;
-        /*
-
-        //Location location = mMap.getMyLocation();
-        //try {
-        //    mMap.setMyLocationEnabled(true);
-        //}catch (SecurityException e){
-        //    Toast.makeText(this, "Open Location",Toast.LENGTH_SHORT).show();
-        //    Log.e("LAK",e.toString());
-        //}
-        // Add a marker in Sydney and move the camera
-        //LatLng sydney = new LatLng(-34, 151);
-
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API).build();
-
-        mGoogleApiClient.connect();
-
-        LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
-        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder().addLocationRequest(mLocationRequest);
-
-        PendingResult<LocationSettingsResult> result =
-                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient, builder.build());
-
-    */
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         LocationRequest mLocationRequest = new LocationRequest();
@@ -220,8 +171,14 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         mylocation = new LatLng(location.getLatitude(), location.getLongitude());
 
-                        mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
+                        if(marker != null){
+                            marker.remove();
+                        }
+                        marker = mMap.addMarker(new MarkerOptions().position(mylocation));
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
+
+                        mDatabase.child("879").child("bus"+index).child("lat").setValue(location.getLatitude()+"");
+                        mDatabase.child("879").child("bus"+index).child("long").setValue(location.getLongitude()+"");
 
                         Log.i("Lakshay",  "Lat:" + location.getLatitude() + "Long: "+location.getLongitude() );
                         // Update UI with location data
@@ -234,12 +191,17 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                     mLocationCallback,
                     null /* Looper */);
 
-
         }
         catch (SecurityException e){
 
         }
 
+    }
+
+    @Override
+    protected void onStop() {
+        mDatabase.child("879").child("bus"+index).child("check").setValue("true");
+        super.onStop();
     }
 
     @Override
@@ -257,23 +219,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mGoogleApiClient.connect();
     }
 
-    public Address getAddress(double latitude, double longitude)
-    {
-        Geocoder geocoder;
-        List<Address> addresses;
-        geocoder = new Geocoder(this, Locale.getDefault());
-
-        try {
-            addresses = geocoder.getFromLocation(latitude,longitude, 1); // Here 1 represent max location result to returned, by documents it recommended 1 to 5
-            return addresses.get(0);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
     private boolean checkPlayServices() {
-
         GoogleApiAvailability googleApiAvailability = GoogleApiAvailability.getInstance();
         int resultCode = googleApiAvailability.isGooglePlayServicesAvailable(this);
 
@@ -287,51 +233,6 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
             return false;
         }
         return true;
-    }
-
-    private void writeNewUser(String userId, String name, String email) {
-        User user = new User(name, email);
-
-        mDatabase.child("users").child(userId).setValue(user);
-    }
-
-    public class User {
-
-        public String username;
-        public String email;
-
-        public User() {
-            // Default constructor required for calls to DataSnapshot.getValue(User.class)
-        }
-
-        public User(String username, String email) {
-            this.username = username;
-            this.email = email;
-        }
-
-    }
-
-    public void GetLocation(){
-
-        // check if GPS enabled
-        if(gps.canGetLocation()){
-
-            double latitude = gps.getLatitude();
-            double longitude = gps.getLongitude();
-
-            mylocation = new LatLng(latitude, longitude);
-            mMap.addMarker(new MarkerOptions().position(mylocation).title("Marker in Sydney"));
-            mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
-            Log.v("Lakshay","Longitude: "+ longitude + "Latitude: "+latitude);
-
-            // \n is for new line
-            Toast.makeText(getApplicationContext(), "Your Location is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_SHORT).show();
-        }else {
-            // can't get location
-            // GPS or Network is not enabled
-            // Ask user to enable GPS/network in settings
-            gps.showSettingsAlert();
-        }
     }
 
 }

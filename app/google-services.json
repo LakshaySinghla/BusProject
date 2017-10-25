@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "805281412251-p93ekr7qk056tpcmio5htjf3nanjdqq6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.carpenoctem.myapplication1",
+            "certificate_hash": "b5ba2caeace990da43cdaf94de4180d65539dcf0"
+          }
+        },
+        {
           "client_id": "805281412251-a20vj8vquljniirl1ln85heb2p0n0ais.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -29,8 +37,13 @@
           "status": 1
         },
         "appinvite_service": {
-          "status": 1,
-          "other_platform_oauth_client": []
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "805281412251-a20vj8vquljniirl1ln85heb2p0n0ais.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         },
         "ads_service": {
           "status": 2
