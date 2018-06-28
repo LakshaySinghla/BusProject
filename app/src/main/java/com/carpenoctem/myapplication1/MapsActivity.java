@@ -1,6 +1,7 @@
 package com.carpenoctem.myapplication1;
 
 import android.content.Intent;
+import android.content.IntentSender;
 import android.location.Address;
 import android.location.Geocoder;
 import android.location.Location;
@@ -20,13 +21,16 @@ import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResolvableApiException;
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationResult;
 import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResponse;
 import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.SettingsClient;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,7 +38,9 @@ import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -55,84 +61,44 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationCallback mLocationCallback;
+    LocationRequest mLocationRequest;
     Marker marker;
-    int index;
-    String check;
+    int index, REQUEST_CHECK_SETTINGS = 200;
+    String number;
     private DatabaseReference mDatabase;
+    Button stop;
 
     boolean readyMap =false;
-    ImageView current;
-    EditText current_ed, destination;
-    Button write, read;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_maps);
-        Intent i =getIntent();
-        index = i.getIntExtra("index",0);
-
+        index = getIntent().getIntExtra("index",0);
+        number = getIntent().getStringExtra("number");
         mDatabase = FirebaseDatabase.getInstance().getReference();
 
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
         SupportMapFragment mapFragment = (SupportMapFragment) getSupportFragmentManager()
                 .findFragmentById(R.id.map);
         mapFragment.getMapAsync(this);
-
-        read = (Button) findViewById(R.id.read);
-        write = (Button) findViewById(R.id.write);
-        read.setOnClickListener(new View.OnClickListener() {
+        stop = (Button) findViewById(R.id.stop);
+        stop.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if (marker != null) {
-                    marker.remove();
-                }
-                marker = mMap.addMarker(new MarkerOptions().position(new LatLng(-31.90, 115.86)));
-                mMap.moveCamera(CameraUpdateFactory.newLatLng(new LatLng(-31.90, 115.86)));
+                mDatabase.child(number).child("bus"+index).child("check").setValue("true");
+                mDatabase.child(number).child("bus"+index).child("lat").setValue("");
+                mDatabase.child(number).child("bus"+index).child("long").setValue("");
+                mFusedLocationClient.removeLocationUpdates(mLocationCallback);
             }
         });
-
-        current = (ImageView) findViewById(R.id.current_location);
-        current.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if(readyMap){
-
-                }
-                else{
-                    Toast.makeText(MapsActivity.this,"Turn On the Location to get Current Location",Toast.LENGTH_LONG).show();
-                }
-            }
-        });
-
-        /*
-        for(index=1;index<=2;index++){
-            mDatabase.addValueEventListener(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    check = dataSnapshot.child("879").child("bus" + index).child("check").getValue(String.class);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-
-            if (check.equals("true")) {
-                mDatabase.child("879").child("bus" + index).child("check").setValue("false");
-                break;
-            }
-        }
-        */
 
     }
 
     /**
      * Manipulates the map once available.
      * This callback is triggered when the map is ready to be used.
-     * This is where we can add markers or lines, add listeners or move the camera. In this case,
-     * we just add a marker near Sydney, Australia.
+     * This is where we can add markers or lines, add listeners or move the camera.
      * If Google Play services is not installed on the device, the user will be prompted to install
      * it inside the SupportMapFragment. This method will only be triggered once the user has
      * installed Google Play services and returned to the app.
@@ -142,22 +108,66 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         mMap = googleMap;
 
         mFusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
-        LocationRequest mLocationRequest = new LocationRequest();
-        mLocationRequest.setInterval(10000);
-        mLocationRequest.setFastestInterval(5000);
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(4000);
+        mLocationRequest.setFastestInterval(2000);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
                 .addLocationRequest(mLocationRequest);
 
+        SettingsClient client = LocationServices.getSettingsClient(this);
+        Task<LocationSettingsResponse> task = client.checkLocationSettings(builder.build());
+        task.addOnSuccessListener(this, new OnSuccessListener<LocationSettingsResponse>() {
+            @Override
+            public void onSuccess(LocationSettingsResponse locationSettingsResponse) {
+                // All location settings are satisfied. The client can initialize location requests here.
+                getCurrentLocation();
+            }
+        });
+
+        task.addOnFailureListener(this, new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                if (e instanceof ResolvableApiException) {
+                    // Location settings are not satisfied, but this can be fixed by showing the user a dialog.
+                    try {
+                        // Show the dialog by calling startResolutionForResult(),and check the result in onActivityResult().
+                        ResolvableApiException resolvable = (ResolvableApiException) e;
+                        resolvable.startResolutionForResult(MapsActivity.this,
+                                REQUEST_CHECK_SETTINGS);
+                    } catch (IntentSender.SendIntentException sendEx) {
+                        // Ignore the error.
+                    }
+                }
+            }
+        });
+
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_CHECK_SETTINGS ){
+            if(resultCode == -1){
+                getCurrentLocation();
+            }
+            else{
+                mDatabase.child(number).child("bus" + index).child("check").setValue("true");
+                finish();
+            }
+        }
+    }
+
+    private void getCurrentLocation(){
         try {
             mFusedLocationClient.getLastLocation()
-                    .addOnSuccessListener(this, new OnSuccessListener<Location>() {
+                    .addOnSuccessListener(MapsActivity.this, new OnSuccessListener<Location>() {
                         @Override
                         public void onSuccess(Location location) {
                             // Got last known location. In some rare situations this can be null.
                             if (location != null) {
                                 // Logic to handle location object
+                                Log.v("Lakshay","Previous lat long obtained");
                             }
                         }
                     });
@@ -171,42 +181,47 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
 
                         mylocation = new LatLng(location.getLatitude(), location.getLongitude());
 
-                        if(marker != null){
-                            marker.remove();
+                        if(marker == null){
+                            mMap.moveCamera(CameraUpdateFactory.zoomBy(14f));
+                            marker = mMap.addMarker(new MarkerOptions().position(mylocation));
                         }
-                        marker = mMap.addMarker(new MarkerOptions().position(mylocation));
+                        marker.setPosition(mylocation);
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
 
-                        mDatabase.child("879").child("bus"+index).child("lat").setValue(location.getLatitude()+"");
-                        mDatabase.child("879").child("bus"+index).child("long").setValue(location.getLongitude()+"");
+                        mDatabase.child(number).child("bus"+index).child("lat").setValue(location.getLatitude()+"");
+                        mDatabase.child(number).child("bus"+index).child("long").setValue(location.getLongitude()+"");
 
                         Log.i("Lakshay",  "Lat:" + location.getLatitude() + "Long: "+location.getLongitude() );
-                        // Update UI with location data
-                        // ...
                     }
-                };
+                }
             };
 
             mFusedLocationClient.requestLocationUpdates(mLocationRequest,
                     mLocationCallback,
                     null /* Looper */);
+            stop.setVisibility(View.VISIBLE);
 
         }
         catch (SecurityException e){
 
         }
-
     }
 
     @Override
-    protected void onStop() {
-        mDatabase.child("879").child("bus"+index).child("check").setValue("true");
-        super.onStop();
+    protected void onDestroy() {
+        Toast.makeText(this, "Hello",Toast.LENGTH_SHORT).show();
+        mDatabase.child(number).child("bus"+index).child("check").setValue("true");
+        mDatabase.child(number).child("bus"+index).child("lat").setValue("");
+        mDatabase.child(number).child("bus"+index).child("long").setValue("");
+        if(mLocationCallback != null) {
+            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
-        Log.v("LAKSHAY", connectionResult.toString());
+        Log.v("LAK Connection Failed", connectionResult.toString());
     }
 
     @Override
@@ -234,5 +249,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
         }
         return true;
     }
+
+
 
 }
