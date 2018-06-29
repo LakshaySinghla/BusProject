@@ -62,7 +62,7 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     private FusedLocationProviderClient mFusedLocationClient;
     private LocationCallback mLocationCallback;
     LocationRequest mLocationRequest;
-    Marker marker;
+    Marker marker = null;
     int index, REQUEST_CHECK_SETTINGS = 200;
     String number;
     private DatabaseReference mDatabase;
@@ -89,7 +89,10 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                 mDatabase.child(number).child("bus"+index).child("check").setValue("true");
                 mDatabase.child(number).child("bus"+index).child("lat").setValue("");
                 mDatabase.child(number).child("bus"+index).child("long").setValue("");
-                mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+                if(mLocationCallback != null) {
+                    mFusedLocationClient.removeLocationUpdates(mLocationCallback);
+                }
+                finish();
             }
         });
 
@@ -184,10 +187,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
                         mylocation = new LatLng(location.getLatitude(), location.getLongitude());
 
                         if(marker == null){
-                            mMap.moveCamera(CameraUpdateFactory.zoomBy(14f));
                             marker = mMap.addMarker(new MarkerOptions().position(mylocation));
                         }
                         marker.setPosition(mylocation);
+//                        mMap.moveCamera(CameraUpdateFactory.zoomBy(12f));
+                        mMap.moveCamera(CameraUpdateFactory.zoomTo(16f));
                         mMap.moveCamera(CameraUpdateFactory.newLatLng(mylocation));
 
                         mDatabase.child(number).child("bus"+index).child("lat").setValue(location.getLatitude()+"");
@@ -210,15 +214,8 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     }
 
     @Override
-    protected void onDestroy() {
-        Toast.makeText(this, "Hello",Toast.LENGTH_SHORT).show();
-        mDatabase.child(number).child("bus"+index).child("check").setValue("true");
-        mDatabase.child(number).child("bus"+index).child("lat").setValue("");
-        mDatabase.child(number).child("bus"+index).child("long").setValue("");
-        if(mLocationCallback != null) {
-            mFusedLocationClient.removeLocationUpdates(mLocationCallback);
-        }
-        super.onDestroy();
+    public void onBackPressed() {
+        Toast.makeText(this,"Press Stop button to exit",Toast.LENGTH_SHORT).show();
     }
 
     @Override
