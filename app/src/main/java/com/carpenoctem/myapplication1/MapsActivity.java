@@ -149,9 +149,11 @@ public class MapsActivity extends FragmentActivity implements OnMapReadyCallback
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         if(requestCode == REQUEST_CHECK_SETTINGS ){
             if(resultCode == -1){
+                //Success, start tracking user
                 getCurrentLocation();
             }
             else{
+                //Failure, Stop app
                 mDatabase.child(number).child("bus" + index).child("check").setValue("true");
                 finish();
             }
