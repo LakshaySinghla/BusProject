@@ -17,7 +17,7 @@ import android.Manifest;
  */
 
 public class BusNumberActivity extends AppCompatActivity {
-
+    String kishan;
     TextView tv1, tv2;
     String number;
     Intent i ;
