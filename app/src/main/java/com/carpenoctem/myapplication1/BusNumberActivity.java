@@ -16,9 +16,9 @@ import android.Manifest;
  * Created by Lakshay Singhla on 27-Oct-17.
  */
 
-public class BusNumberActivity extends AppCompatActivity {
+public class BusNumberActivity extends AppCompatActivity implements View.OnClickListener {
     String kishan;
-    TextView tv1, tv2;
+    TextView bus1, bus2, bus3, bus4, bus5, bus6, bus7;
     String number;
     Intent i ;
     final int LocationRequestCode = 100;
@@ -64,27 +64,61 @@ public class BusNumberActivity extends AppCompatActivity {
     private void proceedAfterPermission(){
 
         i = new Intent(this, SplashScreen.class);
-        tv1 = (TextView) findViewById(R.id.text1);
-        tv2 = (TextView) findViewById(R.id.text2);
+        findViewById(R.id.bus1).setOnClickListener(this);
+        findViewById(R.id.bus2).setOnClickListener(this);
+        findViewById(R.id.bus3).setOnClickListener(this);
+        findViewById(R.id.bus4).setOnClickListener(this);
+        findViewById(R.id.bus5).setOnClickListener(this);
+        findViewById(R.id.bus6).setOnClickListener(this);
+        findViewById(R.id.bus7).setOnClickListener(this);
+        findViewById(R.id.bus8).setOnClickListener(this);
+//        bus1 = (TextView) findViewById(R.id.text1);
+//        bus2 = (TextView) findViewById(R.id.text2);
 
-        tv1.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                number = "879A from Shahbad Dairy to Janakpuri";
+//        bus1.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                number = "879A from Shahbad Dairy to Janakpuri";
+//                i.putExtra("number",number);
+//                startActivity(i);
+//                finish();
+//            }
+//        });
+//
+//        bus2.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View view) {
+//                number = "879A from Janakpuri to Shahbad Dairy";
+//                i.putExtra("number",number);
+//                startActivity(i);
+//                finish();
+//            }
+//        });
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch(view.getId()){
+            case R.id.bus1:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus2:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus3:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus4:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus5:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus6:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus7:
+                number = ((TextView)view).getText().toString();
+            case R.id.bus8:
+                number = ((TextView)view).getText().toString();
                 i.putExtra("number",number);
                 startActivity(i);
                 finish();
-            }
-        });
-
-        tv2.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                number = "879A from Janakpuri to Shahbad Dairy";
-                i.putExtra("number",number);
-                startActivity(i);
-                finish();
-            }
-        });
+                break;
+        }
     }
 }

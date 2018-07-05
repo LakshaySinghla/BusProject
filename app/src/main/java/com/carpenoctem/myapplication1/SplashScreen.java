@@ -33,7 +33,7 @@ public class SplashScreen extends AppCompatActivity {
         mDatabase.addListenerForSingleValueEvent(new ValueEventListener() {
            @Override
            public void onDataChange(DataSnapshot dataSnapshot) {
-               for(index = 1;index<5;index++){
+               for(index = 1;index<=dataSnapshot.getChildrenCount();index++){
                    check = dataSnapshot.child(num).child("bus" + index).child("check").getValue(String.class);
                    if(check == null || !check.equals("false")){
                        mDatabase.child(num).child("bus" + index).child("check").setValue("false");

@@ -5,17 +5,94 @@
     android:layout_height="match_parent">
 
     <TextView
-        android:id="@+id/text1"
+        android:id="@+id/bus1"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:padding="10dp"
-        android:text="879A from Shahbad Dairy to Janakpuri"/>
+        android:layout_marginTop="15dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginRight="5dp"
+        android:layout_marginBottom="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="879 from Shahbad Dairy to Janakpuri" />
 
     <TextView
-        android:id="@+id/text2"
+        android:id="@+id/bus2"
         android:layout_width="match_parent"
         android:layout_height="40dp"
-        android:padding="10dp"
-        android:text="879A from Janakpuri to Shahbad Dairy"/>
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="879 from Janakpuri to Shahbad Dairy"/>
+
+    <TextView
+        android:id="@+id/bus3"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="879A from Badli Railway Stn to Janakpuri"/>
+
+    <TextView
+        android:id="@+id/bus4"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="879A from Janakpuri to Badli Railway Stn"/>
+
+    <TextView
+        android:id="@+id/bus5"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="106 from Qutub Garh to Old Delhi Railway Stn"/>
+
+    <TextView
+        android:id="@+id/bus6"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="106 from Old Delhi Railway Stn to Qutub Garh"/>
+
+    <TextView
+        android:id="@+id/bus7"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="106 from Bawana to Old Delhi Railway Stn"/>
+
+    <TextView
+        android:id="@+id/bus8"
+        android:layout_width="match_parent"
+        android:layout_height="40dp"
+        android:layout_margin="5dp"
+        android:gravity="center"
+        android:textSize="18sp"
+        android:background="@drawable/bus_number_background"
+        android:textColor="@drawable/text_color"
+        android:text="106 from Old Delhi Railway Stn to Bawana"/>
 
 </LinearLayout>
